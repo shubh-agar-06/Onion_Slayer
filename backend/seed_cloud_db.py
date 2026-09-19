@@ -1,3 +1,4 @@
+ï»¿# -*- coding: utf-8 -*-
 """
 Cloud Database Seeder for Onion Slayer.
 Imports the complete historical dataset (data/main_db.sql) into TiDB Cloud or any remote MySQL instance.
@@ -10,7 +11,7 @@ import mysql.connector
 
 def run_seed():
     print("==================================================")
-    print("?? Onion Slayer — Cloud Database Seeder")
+    print("[*] Onion Slayer - Cloud Database Seeder")
     print("==================================================")
 
     host = sys.argv[1] if len(sys.argv) > 1 else os.getenv("DB_HOST") or input("Enter TiDB Host (e.g. gateway01...tidbcloud.com): ").strip()
@@ -44,7 +45,6 @@ def run_seed():
     with open(sql_file, "r", encoding="utf-8", errors="ignore") as f:
         content = f.read()
 
-    # Split into statements
     statements = [s.strip() for s in content.split(";\n") if s.strip() and not s.strip().startswith("/*")]
     total = len(statements)
     print(f"[+] Found {total} SQL statements to execute.")
@@ -66,7 +66,6 @@ def run_seed():
                 pct = (idx / total) * 100
                 print(f"    -> Progress: {idx}/{total} statements executed ({pct:.1f}%)")
         except Exception as err:
-            # Ignore harmless warnings/table drop errors
             err_msg = str(err)
             if "already exists" not in err_msg.lower() and "doesn't exist" not in err_msg.lower():
                 print(f"    [!] Warning on statement #{idx}: {err_msg[:120]}")
@@ -79,7 +78,7 @@ def run_seed():
 
     elapsed = time.time() - t0
     print("\n==================================================")
-    print(f"?? Database Seeding Complete in {elapsed:.1f}s!")
+    print(f"[+] Database Seeding Complete in {elapsed:.1f}s!")
     print(f"Successfully executed {success}/{total} statements.")
     print("Now refresh your Render web app to see the complete graph!")
     print("==================================================")
