@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: onion-slayer
+    runtime: python
+    buildCommand: bash render-build.sh
+    startCommand: >
+      gunicorn
+      --chdir backend
+      app:app
+      --workers 1
+      --threads 4
+      --timeout 120
+      --bind 0.0.0.0:$PORT
+      --worker-class gthread
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: VENDOR_LIMIT
+        value: "150"

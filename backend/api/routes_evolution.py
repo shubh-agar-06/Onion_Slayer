@@ -122,6 +122,7 @@ def import_dataset():
 
 
 @evolution_bp.route("/identity/suggestions", methods=["GET"])
+@evolution_bp.route("/api/v1/identity/suggestions", methods=["GET"])
 def list_suggestions():
     """List pending identity suggestions awaiting analyst review."""
     limit = request.args.get("limit", default=50, type=int)
@@ -137,6 +138,7 @@ def list_suggestions():
 
 
 @evolution_bp.route("/identity/approve", methods=["POST"])
+@evolution_bp.route("/api/v1/identity/approve", methods=["POST"])
 def approve_suggestion():
     """Analyst approves candidate merge suggestion -> merges clusters & creates SAME_AS edge."""
     payload = request.get_json(silent=True) or {}
@@ -159,6 +161,7 @@ def approve_suggestion():
 
 
 @evolution_bp.route("/identity/reject", methods=["POST"])
+@evolution_bp.route("/api/v1/identity/reject", methods=["POST"])
 def reject_suggestion():
     """Analyst rejects candidate merge suggestion -> keeps entities separate and logs decision."""
     payload = request.get_json(silent=True) or {}

@@ -36,7 +36,8 @@ def startup():
         try:
             init_connection_pool()
             NetworkXGraphEngine.build_graph()
-            StylometricEngine.initialize_from_csv()
+            vendor_limit = int(os.environ.get("VENDOR_LIMIT", "150"))
+            StylometricEngine.initialize_from_csv(max_vendors=vendor_limit)
             InfrastructureService.initialize_from_json()
             AutonomousCollector.get_instance().start()
             _INITIALIZED = True

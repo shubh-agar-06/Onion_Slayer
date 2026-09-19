@@ -13,7 +13,7 @@ from mysql.connector import errorcode, pooling
 _POOL: Optional[pooling.MySQLConnectionPool] = None
 
 
-def init_connection_pool(pool_name: str = "cti_db_pool", pool_size: int = 16) -> pooling.MySQLConnectionPool:
+def init_connection_pool(pool_name: str = "cti_db_pool", pool_size: int = 4) -> pooling.MySQLConnectionPool:
     """Initialize the MySQL connection pool."""
     global _POOL
     if _POOL is None:
