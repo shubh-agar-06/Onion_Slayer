@@ -1,4 +1,5 @@
 import os
+import threading
 from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 
@@ -22,24 +23,26 @@ from services.infrastructure_service import InfrastructureService
 from services.stylometric_service import StylometricEngine
 
 _INITIALIZED = False
+_INIT_LOCK = threading.Lock()
 
 
 def startup():
     """Pre-flight warmup: initialize DB pool, build NetworkX graph, load stylometric signatures, and start autonomous collector."""
     global _INITIALIZED
-    if _INITIALIZED:
-        return
-    logger.info("Initializing CTI Platform backend services...")
-    try:
-        init_connection_pool()
-        NetworkXGraphEngine.build_graph()
-        StylometricEngine.initialize_from_csv()
-        InfrastructureService.initialize_from_json()
-        AutonomousCollector.get_instance().start()
-        _INITIALIZED = True
-        logger.info("CTI Platform backend initialization complete.")
-    except Exception as exc:
-        logger.error("Failed during backend warmup: %s", exc)
+    with _INIT_LOCK:
+        if _INITIALIZED:
+            return
+        logger.info("Initializing CTI Platform backend services in background...")
+        try:
+            init_connection_pool()
+            NetworkXGraphEngine.build_graph()
+            StylometricEngine.initialize_from_csv()
+            InfrastructureService.initialize_from_json()
+            AutonomousCollector.get_instance().start()
+            _INITIALIZED = True
+            logger.info("CTI Platform backend initialization complete.")
+        except Exception as exc:
+            logger.error("Failed during backend warmup: %s", exc)
 
 
 def create_app() -> Flask:
@@ -51,6 +54,14 @@ def create_app() -> Flask:
         app = Flask(__name__)
 
     CORS(app)
+
+    @app.route("/healthz", methods=["GET"])
+    def health_check():
+        """Health check endpoint for cloud orchestrators."""
+        return jsonify({
+            "status": "ready" if _INITIALIZED else "warming_up",
+            "initialized": _INITIALIZED
+        }), 200
 
     # Register blueprints
     app.register_blueprint(graph_bp)
@@ -81,7 +92,9 @@ def create_app() -> Flask:
 
 
 app = create_app()
-startup()
+
+# Warm up in background thread so Gunicorn binds to the port immediately without timing out Render
+threading.Thread(target=startup, daemon=True).start()
 
 
 if __name__ == "__main__":
